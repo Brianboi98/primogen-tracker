@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Clean sans-serif to match the HoYoverse web aesthetic */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         :root {
@@ -34,6 +33,493 @@
             flex-direction: column;
             overflow-x: hidden;
         }
+
+        .hyv-card {
+            background-color: var(--hyv-card);
+            border: 1px solid var(--hyv-border);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .hyv-stat-box {
+            background-color: var(--hyv-input-bg);
+            border: 1px solid var(--hyv-border);
+            border-radius: 12px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .hyv-stat-box:hover {
+            border-color: #d1d5db;
+        }
+
+        .hyv-input {
+            background-color: var(--hyv-input-bg);
+            border: 1px solid var(--hyv-border);
+            color: var(--hyv-text-main);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .hyv-input:focus {
+            outline: none;
+            border-color: var(--hyv-blue);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(85, 117, 241, 0.1);
+        }
+
+        .hyv-btn {
+            background-color: var(--hyv-blue);
+            color: #ffffff;
+            border-radius: 9999px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .hyv-btn:hover {
+            background-color: var(--hyv-blue-hover);
+        }
+        
+        .hyv-btn:active {
+            transform: scale(0.98);
+        }
+
+        .hyv-btn-danger {
+            background-color: transparent;
+            border: 1px solid var(--hyv-danger);
+            color: var(--hyv-danger);
+            border-radius: 9999px;
+            transition: all 0.2s ease;
+        }
+
+        .hyv-btn-danger:hover {
+            background-color: var(--hyv-danger-bg);
+        }
+
+        .progress-gradient {
+            background: linear-gradient(90deg, #59c3cd 0%, #d797c5 50%, #f4b6cb 100%);
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--hyv-bg); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-overlay { animation: fadeIn 0.2s ease-out forwards; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="w-full bg-white h-14 flex items-center justify-center relative border-b border-gray-200 shrink-0">
+        <div class="text-[#333333] font-bold text-xl flex items-center tracking-wide">
+            <i class="fas fa-meteor text-blue-500 mr-2"></i> HOYOVERSE <span class="font-normal text-sm text-gray-500 ml-2 hidden sm:inline">| Tracker</span>
+        </div>
+    </nav>
+
+    <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-300">
+        <i class="fas fa-circle-notch text-4xl text-[#5575f1] animate-spin mb-4"></i>
+        <p class="text-sm font-medium text-gray-500 text-center px-4 tracking-wider uppercase mt-3">Connecting to Data...</p>
+    </div>
+
+    <main class="w-full max-w-5xl mx-auto p-4 md:p-8 flex-1 flex flex-col">
+        
+        <header class="mb-8 mt-6 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800 break-words tracking-tight">
+                Primogem Tracker
+            </h1>
+            <p class="text-base text-gray-500 mt-3 break-words max-w-xl mx-auto">Track your Primogems and Intertwined Fates towards your 80-wish guarantee.</p>
+        </header>
+
+        <section id="setup-view" class="hidden flex-1 flex flex-col items-center justify-center py-6">
+            <div class="hyv-card p-6 md:p-8 w-full max-w-lg mx-auto">
+                <h2 class="text-xl font-bold mb-6 text-center text-gray-800 break-words">Initialize Tracker</h2>
+                
+                <form id="setup-form" class="space-y-5">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2 font-medium break-words">Character Name</label>
+                        <input type="text" id="setup-name" required placeholder="e.g., Arlecchino" class="hyv-input w-full px-4 py-3 text-base">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2 font-medium flex justify-between break-words">
+                            <span>Current Pity</span>
+                            <span class="text-xs text-gray-400 mt-0.5">Max 80</span>
+                        </label>
+                        <input type="number" id="setup-pity" required min="0" max="80" value="0" class="hyv-input w-full px-4 py-3 text-base">
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-5">
+                        <div class="flex-1">
+                            <label class="block text-sm text-[#d797c5] mb-2 font-medium break-words">Intertwined Fates</label>
+                            <input type="number" id="setup-fates" required min="0" value="0" class="hyv-input w-full px-4 py-3 text-base">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm text-[#59c3cd] mb-2 font-medium break-words">Primogems</label>
+                            <input type="number" id="setup-primo" required min="0" value="0" class="hyv-input w-full px-4 py-3 text-base">
+                        </div>
+                    </div>
+                    
+                    <div class="pt-2 mt-4">
+                        <button type="submit" class="hyv-btn w-full py-3.5 font-bold text-base break-words shadow-md shadow-blue-500/20 flex items-center justify-center">
+                            <span>Confirm Registration</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="tracker-view" class="hidden flex-col gap-6">
+            
+            <div class="hyv-card p-6 md:p-8 relative">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4 border-b border-gray-100 pb-6">
+                    <div>
+                        <h2 class="text-sm text-gray-500 uppercase tracking-wider mb-1 break-words font-semibold">Current Target</h2>
+                        <div class="text-2xl md:text-3xl font-bold text-gray-800 break-words uppercase" id="display-name"></div>
+                    </div>
+                    <div class="text-left md:text-right">
+                        <div id="status-message" class="text-sm md:text-base font-semibold break-words px-3 py-1.5 rounded-full bg-blue-50 text-[#5575f1] border border-blue-100 inline-block"></div>
+                    </div>
+                </div>
+
+                <div class="mb-2 flex justify-between text-sm font-semibold break-words">
+                    <span class="text-gray-600">Total Progress</span>
+                    <span id="progress-text" class="text-[#5575f1]">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-5 relative overflow-hidden mb-8 shadow-inner">
+                    <div id="progress-bar-fill" class="h-full progress-gradient transition-all duration-1000 ease-out rounded-full min-w-[1rem]" style="width: 0%;"></div>
+                </div>
+
+                <h3 class="text-sm text-gray-800 font-bold mb-4 break-words">Detailed Statistics</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 text-left">
+                    
+                    <div class="hyv-stat-box p-4 flex flex-col justify-center">
+                        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1 break-words">Current Pity</div>
+                        <div id="stat-pity" class="text-xl md:text-2xl font-bold text-gray-800 break-words">0</div>
+                    </div>
+                    
+                    <div class="hyv-stat-box p-4 flex flex-col justify-center">
+                        <div class="text-[#d797c5] text-xs font-semibold uppercase tracking-wide mb-1 break-words">Saved Fates</div>
+                        <div id="stat-fates" class="text-xl md:text-2xl font-bold text-gray-800 break-words">0</div>
+                    </div>
+                    
+                    <div class="hyv-stat-box p-4 flex flex-col justify-center col-span-2 md:col-span-1">
+                        <div class="text-[#59c3cd] text-xs font-semibold uppercase tracking-wide mb-1 break-words">Raw Primogems</div>
+                        <div id="stat-raw-primo" class="text-xl md:text-2xl font-bold text-gray-800 break-words">0</div>
+                    </div>
+                    
+                    <div class="hyv-stat-box p-4 flex flex-col justify-center col-span-2 md:col-span-1 border-l-4 border-l-[#5575f1] bg-blue-50/50">
+                        <div class="text-[#5575f1] text-xs font-bold uppercase tracking-wide mb-1 break-words">Total Eq. Primogems</div>
+                        <div id="stat-total-primo" class="text-xl md:text-2xl font-bold text-gray-800 break-words">0 / 12,800</div>
+                    </div>
+                    
+                    <div class="hyv-stat-box p-4 flex flex-col justify-center">
+                        <div class="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1 break-words">Total Eq. Wishes</div>
+                        <div id="stat-wishes" class="text-xl md:text-2xl font-bold text-gray-800 break-words">0 / 80</div>
+                    </div>
+                    
+                    <div class="hyv-stat-box p-4 flex flex-col justify-center">
+                        <div class="text-red-400 text-xs font-semibold uppercase tracking-wide mb-1 break-words">Primogems Needed</div>
+                        <div id="stat-needed" class="text-xl md:text-2xl font-bold text-gray-800 break-words">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                
+                <div class="hyv-card p-6 flex-1">
+                    <h3 class="text-sm text-gray-800 font-bold mb-4 break-words">Log New Savings</h3>
+                    <form id="add-form" class="flex flex-col sm:flex-row gap-3 w-full">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-gem absolute left-4 top-3.5 text-[#59c3cd] text-sm"></i>
+                            <input type="number" id="add-primo-amount" min="0" placeholder="Primogems" class="hyv-input w-full pl-10 pr-4 py-3 text-base">
+                        </div>
+                        <div class="flex-1 relative">
+                            <i class="fas fa-meteor absolute left-4 top-3.5 text-[#d797c5] text-sm"></i>
+                            <input type="number" id="add-fates-amount" min="0" placeholder="Intertwined Fates" class="hyv-input w-full pl-10 pr-4 py-3 text-base">
+                        </div>
+                        <button type="submit" class="hyv-btn w-full sm:w-32 py-3 font-bold text-sm tracking-wide break-words shadow-md shadow-blue-500/20">
+                            Submit
+                        </button>
+                    </form>
+                    
+                    <div class="mt-5 p-4 bg-gray-50 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-2 border border-gray-100">
+                        <span class="text-sm text-gray-500 font-medium">Current Balances:</span>
+                        <div class="text-sm font-bold flex gap-4 text-gray-700">
+                            <span><i class="fas fa-gem text-[#59c3cd] mr-1 text-xs"></i> <span id="display-total-primo">0</span></span>
+                            <span><i class="fas fa-meteor text-[#d797c5] mr-1 text-xs"></i> <span id="display-total-fates">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hyv-card p-6 lg:w-64 flex flex-col justify-center items-center text-center bg-red-50/30 border-red-100">
+                    <h3 class="text-sm text-red-500 font-bold mb-2 break-words">Danger Zone</h3>
+                    <p class="text-xs text-gray-500 mb-4">Clear current tracking data.</p>
+                    <button onclick="openDeleteModal()" class="hyv-btn-danger w-full py-2.5 font-bold text-sm break-words bg-white">
+                        Delete Record
+                    </button>
+                </div>
+
+            </div>
+            
+            <footer class="mt-4 text-center text-xs text-gray-400 pb-8 font-medium">
+                <span id="footer-storage-text">Data is saved securely to your Firebase.</span> <br class="sm:hidden"> 1 Intertwined Fate = 160 Primogems.
+            </footer>
+        </section>
+    </main>
+
+    <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm modal-overlay" onclick="closeDeleteModal()"></div>
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full relative z-10 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto mb-4 text-xl">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2 break-words">System Prompt</h3>
+                <p class="text-gray-500 text-sm break-words">This will permanently delete your wish tracking data. Are you sure you want to proceed?</p>
+            </div>
+            
+            <div class="flex flex-col gap-3">
+                <button onclick="executeDelete()" id="confirm-delete-btn" class="hyv-btn w-full py-3 font-bold text-sm shadow-md shadow-blue-500/20 break-words flex justify-center">
+                    Confirm
+                </button>
+                <button onclick="closeDeleteModal()" class="w-full py-3 rounded-full font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors text-sm break-words">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+        let currentData = null;
+        let currentUser = null;
+        let unsubscribeTracker = null;
+        let failsafeTimer = null;
+        
+        const loadingScreen = document.getElementById('loading-screen');
+        const setupView = document.getElementById('setup-view');
+        const trackerView = document.getElementById('tracker-view');
+        const deleteModal = document.getElementById('delete-modal');
+
+        function hideLoading() {
+            if (failsafeTimer) clearTimeout(failsafeTimer);
+            loadingScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                loadingScreen.style.display = 'none';
+            }, 300);
+        }
+
+        function showSetup() {
+            setupView.classList.remove('hidden');
+            trackerView.classList.add('hidden');
+        }
+
+        function showTracker() {
+            setupView.classList.add('hidden');
+            trackerView.classList.remove('hidden');
+        }
+
+        failsafeTimer = setTimeout(() => {
+            if (!loadingScreen.classList.contains('hidden')) {
+                console.warn("Database connection took too long. Check Firebase Console Rules & Auth.");
+                hideLoading();
+                showSetup();
+            }
+        }, 5000);
+
+        function updateUI(data) {
+            const GOAL_WISHES = 80;
+            const PRIMO_PER_WISH = 160;
+            const GOAL_PRIMO = GOAL_WISHES * PRIMO_PER_WISH; 
+
+            const { characterName, pity, primogems } = data;
+            const fates = data.fates || 0; 
+
+            const pityValueInPrimo = pity * PRIMO_PER_WISH;
+            const fatesValueInPrimo = fates * PRIMO_PER_WISH;
+            const totalProgressPrimo = pityValueInPrimo + fatesValueInPrimo + primogems;
+            
+            let percentage = (totalProgressPrimo / GOAL_PRIMO) * 100;
+            if (percentage > 100) percentage = 100;
+            
+            const totalEquivalentWishes = Math.floor(totalProgressPrimo / PRIMO_PER_WISH);
+            const remainingPrimo = Math.max(0, GOAL_PRIMO - totalProgressPrimo);
+
+            document.getElementById('display-name').textContent = characterName;
+            document.getElementById('stat-pity').textContent = pity;
+            document.getElementById('stat-fates').textContent = fates.toLocaleString();
+            document.getElementById('stat-raw-primo').textContent = primogems.toLocaleString();
+            document.getElementById('stat-total-primo').textContent = `${totalProgressPrimo.toLocaleString()} / 12,800`;
+            document.getElementById('stat-wishes').textContent = `${Math.min(totalEquivalentWishes, GOAL_WISHES)} / ${GOAL_WISHES}`;
+            document.getElementById('stat-needed').textContent = remainingPrimo.toLocaleString();
+            document.getElementById('display-total-primo').textContent = primogems.toLocaleString();
+            document.getElementById('display-total-fates').textContent = fates.toLocaleString();
+            
+            const progressBar = document.getElementById('progress-bar-fill');
+            const progressText = document.getElementById('progress-text');
+            const statusMessage = document.getElementById('status-message');
+
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage.toFixed(1)}%`;
+
+            if (percentage >= 100) {
+                statusMessage.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Target Reached`;
+                statusMessage.className = "text-sm md:text-base font-semibold break-words px-3 py-1.5 rounded-full bg-green-50 text-green-600 border border-green-200 inline-block";
+                progressBar.classList.add('animate-pulse');
+            } else {
+                statusMessage.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> In Progress`;
+                statusMessage.className = "text-sm md:text-base font-semibold break-words px-3 py-1.5 rounded-full bg-blue-50 text-[#5575f1] border border-blue-100 inline-block";
+                progressBar.classList.remove('animate-pulse');
+            }
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgriyegssKUNuup0gt3ay-l_GUB1Ph-dE",
+            authDomain: "primogem-tracker.firebaseapp.com",
+            projectId: "primogem-tracker",
+            storageBucket: "primogem-tracker.firebasestorage.app",
+            messagingSenderId: "995957686162",
+            appId: "1:995957686162:web:74e8f9c3e5e2b469164b4b",
+            measurementId: "G-1KW4P961FG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        signInAnonymously(auth).catch((error) => {
+            console.error("Auth failed. Make sure Anonymous Auth is enabled in Firebase Console.", error);
+            hideLoading();
+            showSetup();
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                listenToTrackerData();
+            } else {
+                currentUser = null;
+                if (unsubscribeTracker) unsubscribeTracker();
+                showSetup();
+                hideLoading();
+            }
+        });
+
+        function listenToTrackerData() {
+            if (!currentUser) return;
+            
+            const docRef = doc(db, 'users', currentUser.uid, 'data', 'current_goal');
+            
+            unsubscribeTracker = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    currentData = docSnap.data();
+                    updateUI(currentData);
+                    showTracker();
+                } else {
+                    currentData = null;
+                    showSetup();
+                }
+                hideLoading();
+            }, (error) => {
+                console.error("Listen Error (Check Firestore Rules):", error);
+                hideLoading();
+            });
+        }
+
+        document.getElementById('setup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) {
+                alert("Database connection not established. Check Firebase Console settings.");
+                return;
+            }
+            
+            const name = document.getElementById('setup-name').value.trim();
+            const pity = parseInt(document.getElementById('setup-pity').value) || 0;
+            const fates = parseInt(document.getElementById('setup-fates').value) || 0;
+            const primo = parseInt(document.getElementById('setup-primo').value) || 0;
+
+            const btn = document.querySelector('#setup-form button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Loading...';
+            btn.disabled = true;
+
+            const dataObj = {
+                characterName: name,
+                pity: pity,
+                fates: fates,
+                primogems: primo,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const docRef = doc(db, 'users', currentUser.uid, 'data', 'current_goal');
+                await setDoc(docRef, dataObj);
+            } catch (error) {
+                console.error("Error saving (Check Firestore Rules):", error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('add-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentData || !currentUser) return;
+
+            const addPrimo = parseInt(document.getElementById('add-primo-amount').value) || 0;
+            const addFates = parseInt(document.getElementById('add-fates-amount').value) || 0;
+            if (addPrimo === 0 && addFates === 0) return;
+
+            const newPrimoTotal = currentData.primogems + addPrimo;
+            const newFatesTotal = (currentData.fates || 0) + addFates;
+
+            const btn = document.querySelector('#add-form button');
+            const originalText = btn.textContent;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const docRef = doc(db, 'users', currentUser.uid, 'data', 'current_goal');
+                await updateDoc(docRef, { primogems: newPrimoTotal, fates: newFatesTotal });
+                document.getElementById('add-primo-amount').value = '';
+                document.getElementById('add-fates-amount').value = '';
+            } catch (error) {
+                console.error("Error updating:", error);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        window.openDeleteModal = function() { deleteModal.classList.remove('hidden'); };
+        window.closeDeleteModal = function() { deleteModal.classList.add('hidden'); };
+
+        window.executeDelete = async function() {
+            if (!currentUser) return;
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const docRef = doc(db, 'users', currentUser.uid, 'data', 'current_goal');
+                await deleteDoc(docRef);
+                closeDeleteModal();
+                document.getElementById('setup-form').reset(); 
+            } catch (error) {
+                console.error("Error deleting:", error);
+            } finally {
+                btn.innerHTML = 'Confirm';
+                btn.disabled = false;
+            }
+        };
+
+    </script>
+</body>
+</html>
+
+
+```
 
         .hyv-card {
             background-color: var(--hyv-card);
