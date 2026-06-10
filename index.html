@@ -71,7 +71,7 @@
         .hyv-btn {
             background-color: var(--hyv-blue);
             color: #ffffff;
-            border-radius: 9999px; /* Pill shape like the screenshot buttons */
+            border-radius: 9999px;
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
@@ -276,7 +276,7 @@
             
             <!-- Footer imitation -->
             <footer class="mt-4 text-center text-xs text-gray-400 pb-8 font-medium">
-                Data is saved securely to the cloud. <br class="sm:hidden"> 1 Intertwined Fate = 160 Primogems.
+                Data is saved securely. <br class="sm:hidden"> 1 Intertwined Fate = 160 Primogems.
             </footer>
         </section>
     </main>
@@ -387,10 +387,11 @@
                     currentData = null;
                     showSetup();
                 }
+                // Force hide loading screen regardless of data state
                 hideLoading();
             }, (error) => {
                 console.error("Firestore Listen Error:", error);
-                hideLoading();
+                hideLoading(); // Force hide on error
             });
         }
 
@@ -399,7 +400,11 @@
         // ==========================================
         function hideLoading() {
             loadingScreen.classList.add('opacity-0');
-            setTimeout(() => loadingScreen.classList.add('hidden'), 300);
+            // Remove from DOM flow shortly after opacity transition
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                loadingScreen.style.display = 'none';
+            }, 300);
         }
 
         function showSetup() {
