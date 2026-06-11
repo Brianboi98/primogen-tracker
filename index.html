@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +15,7 @@
             --hyv-card: #ffffff;
             --hyv-border: #e6e8eb;
             --hyv-text-main: #333333;
+            --hyv-text-muted: #858992;
             --hyv-blue: #5575f1;
             --hyv-blue-hover: #4663d9;
             --hyv-danger: #ff5f5f;
@@ -24,8 +26,9 @@
         body {
             background-color: var(--hyv-bg);
             color: var(--hyv-text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
+            padding: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -43,6 +46,11 @@
             background-color: var(--hyv-input-bg);
             border: 1px solid var(--hyv-border);
             border-radius: 12px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .hyv-stat-box:hover {
+            border-color: #d1d5db;
         }
 
         .hyv-input {
@@ -64,11 +72,16 @@
             background-color: var(--hyv-blue);
             color: #ffffff;
             border-radius: 9999px;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
-        .hyv-btn:hover { background-color: var(--hyv-blue-hover); }
-        .hyv-btn:active { transform: scale(0.98); }
+        .hyv-btn:hover {
+            background-color: var(--hyv-blue-hover);
+        }
+        
+        .hyv-btn:active {
+            transform: scale(0.98);
+        }
 
         .hyv-btn-danger {
             background-color: transparent;
@@ -78,20 +91,23 @@
             transition: all 0.2s ease;
         }
 
-        .hyv-btn-danger:hover { background-color: var(--hyv-danger-bg); }
+        .hyv-btn-danger:hover {
+            background-color: var(--hyv-danger-bg);
+        }
 
         .progress-gradient {
             background: linear-gradient(90deg, #59c3cd 0%, #d797c5 50%, #f4b6cb 100%);
         }
 
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--hyv-bg); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-overlay { animation: fadeIn 0.2s ease-out forwards; }
         .hidden { display: none !important; }
     </style>
-
-    <!-- 1. Using Standard Scripts instead of Modules (Guarantees it loads locally) -->
-    <!-- 2. Using stable version 10.14.0 to prevent 404 Not Found errors -->
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="antialiased">
 
@@ -105,7 +121,7 @@
     <!-- Loading Overlay -->
     <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-300">
         <i class="fas fa-circle-notch text-4xl text-[#5575f1] animate-spin mb-4"></i>
-        <p class="text-sm font-medium text-gray-500 text-center px-4 tracking-wider uppercase mt-3" id="loading-text">Connecting to Data...</p>
+        <p class="text-sm font-medium text-gray-500 text-center px-4 tracking-wider uppercase mt-3">Connecting to Data...</p>
     </div>
 
     <!-- Independent Loader Removal Script (GUARANTEES loading screen disappears) -->
@@ -121,6 +137,7 @@
 
     <main class="w-full max-w-5xl mx-auto p-4 md:p-8 flex-1 flex flex-col">
         
+        <!-- Header Section -->
         <header class="mb-8 mt-6 text-center">
             <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800 break-words tracking-tight">Primogem Tracker</h1>
             <p class="text-base text-gray-500 mt-3 break-words max-w-xl mx-auto">Track your Primogems and Intertwined Fates towards your 80-wish guarantee.</p>
@@ -215,18 +232,18 @@
             <div class="flex flex-col lg:flex-row gap-6">
                 
                 <div class="hyv-card p-6 flex-1">
-                    <h3 class="text-sm text-gray-800 font-bold mb-4">Log New Savings</h3>
+                    <h3 class="text-sm text-gray-800 font-bold mb-4">Update Balances</h3>
                     <form id="add-form" class="flex flex-col sm:flex-row gap-3 w-full">
                         <div class="flex-1 relative">
                             <i class="fas fa-gem absolute left-4 top-3.5 text-[#59c3cd] text-sm"></i>
-                            <input type="number" id="add-primo-amount" min="0" placeholder="Primogems" class="hyv-input w-full pl-10 pr-4 py-3 text-base">
+                            <input type="number" id="add-primo-amount" min="0" placeholder="New Primo Total..." class="hyv-input w-full pl-10 pr-4 py-3 text-base">
                         </div>
                         <div class="flex-1 relative">
                             <i class="fas fa-meteor absolute left-4 top-3.5 text-[#d797c5] text-sm"></i>
-                            <input type="number" id="add-fates-amount" min="0" placeholder="Intertwined Fates" class="hyv-input w-full pl-10 pr-4 py-3 text-base">
+                            <input type="number" id="add-fates-amount" min="0" placeholder="New Fates Total..." class="hyv-input w-full pl-10 pr-4 py-3 text-base">
                         </div>
                         <button type="submit" class="hyv-btn w-full sm:w-32 py-3 font-bold text-sm tracking-wide shadow-md shadow-blue-500/20">
-                            Submit
+                            Update
                         </button>
                     </form>
                     <div class="mt-5 p-4 bg-gray-50 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-2 border border-gray-100">
@@ -277,6 +294,9 @@
     </div>
 
     <!-- MAIN APPLICATION LOGIC -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const setupView = document.getElementById('setup-view');
@@ -368,7 +388,6 @@
 
             // Database Connection Initialization
             try {
-                // Your exact credentials
                 firebase.initializeApp({
                     apiKey: "AIzaSyBgriyegssKUNuup0gt3ay-l_GUB1Ph-dE",
                     authDomain: "primogem-tracker.firebaseapp.com",
@@ -449,22 +468,24 @@
                 btn.disabled = false;
             });
 
-            // Form Submit - Add Savings
+            // Form Submit - Update Balances (OVERRIDING INSTEAD OF ADDING)
             document.getElementById('add-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (!currentData) return;
 
-                const addPrimo = parseInt(document.getElementById('add-primo-amount').value) || 0;
-                const addFates = parseInt(document.getElementById('add-fates-amount').value) || 0;
-                if (addPrimo === 0 && addFates === 0) return;
+                const primoInput = document.getElementById('add-primo-amount').value;
+                const fatesInput = document.getElementById('add-fates-amount').value;
+                
+                if (primoInput === '' && fatesInput === '') return; // Nothing entered
 
                 const btn = document.querySelector('#add-form button');
                 const originalText = btn.textContent;
                 btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
                 btn.disabled = true;
 
-                const newPrimo = parseInt(currentData.primogems) + addPrimo;
-                const newFates = parseInt(currentData.fates || 0) + addFates;
+                // Overwrite with new absolute values. If left blank, keep the old value.
+                const newPrimo = primoInput !== '' ? parseInt(primoInput) : parseInt(currentData.primogems);
+                const newFates = fatesInput !== '' ? parseInt(fatesInput) : parseInt(currentData.fates || 0);
 
                 if (!isLocalMode && authUser && db) {
                     try {
